@@ -20,7 +20,7 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 type apiFunc func(http.ResponseWriter, *http.Request) error // our handle func signature we are using to handle our api
 
 type ApiError struct {
-	Error string
+	Error string `json:"error"`
 }
 
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
@@ -44,6 +44,7 @@ func (s *APIServer) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount)) // wrap the function
 	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountById))
+	router.HandleFunc("/transfer/{id}", makeHTTPHandleFunc(s.handleTransfer))
 	log.Println("JSON API web server starting at port number: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
 }

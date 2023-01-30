@@ -3,7 +3,6 @@ package middleware
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -21,9 +20,6 @@ func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error 
 	if r.Method == "POST" {
 		return s.handleCreateAccount(w, r)
 	}
-	if r.Method == "DELETE" {
-		return s.handleDeleteAccount(w, r)
-	}
 	return fmt.Errorf("%v request method not allowed", r.Method)
 }
 
@@ -36,17 +32,22 @@ func (s *APIServer) handleGetAccounts(w http.ResponseWriter, r *http.Request) er
 }
 
 func (s *APIServer) handleGetAccountById(w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		log.Fatalf("Error parsing the id to int: %v", err)
-		return err
+	if r.Method == "GET" {
+		id, err := getId(r)
+		if err != nil {
+			return err
+
+		}
+		account, err := s.store.GetAccountById(id)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, account)
 	}
-	account, err := s.store.GetAccountById(id)
-	if err != nil {
-		return err
+	if r.Method == "DELETE" {
+		return s.handleDeleteAccount(w, r)
 	}
-	return writeJSON(w, http.StatusOK, account)
+	return fmt.Errorf("method not allowed %s", r.Method)
 }
 
 func (s *APIServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) error {
@@ -62,10 +63,33 @@ func (s *APIServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) error {
-	return nil
-
+	id, err := getId(r)
+	if err != nil {
+		return err
+	}
+	if err := s.store.DeleteAccount(id); err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, map[string]int{"deleted_id": id})
 }
 
 func (s *APIServer) handleTransfer(w http.ResponseWriter, r *http.Request) error {
-	return nil
+	if r.Method == "POST" {
+		transferRequest := new(models.TransferRequest)
+		if err := json.NewDecoder(r.Body).Decode(&transferRequest); err != nil {
+			return err
+		}
+		defer r.Body.Close()
+		return writeJSON(w, http.StatusOK, transferRequest)
+	}
+	return fmt.Errorf("method not allowed %s", r.Method)
+}
+
+func getId(r *http.Request) (int, error) {
+	idstr := mux.Vars(r)["id"]
+	id, err := strconv.Atoi(idstr)
+	if err != nil {
+		return id, fmt.Errorf("invalid id or pasing id error: %s", idstr)
+	}
+	return id, nil
 }
