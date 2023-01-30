@@ -43,6 +43,9 @@ func (s *APIServer) handleGetAccountById(w http.ResponseWriter, r *http.Request)
 		return err
 	}
 	account, err := s.store.GetAccountById(id)
+	if err != nil {
+		return err
+	}
 	return writeJSON(w, http.StatusOK, account)
 }
 

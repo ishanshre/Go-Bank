@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
@@ -93,14 +94,7 @@ func (s *PostgresStore) GetAccounts() ([]*models.Account, error) {
 	defer rows.Close()
 	accounts := []*models.Account{}
 	for rows.Next() {
-		account := new(models.Account)
-		err := rows.Scan(
-			&account.ID, &account.FirstName,
-			&account.LastName,
-			&account.AccountNumber,
-			&account.Balance,
-			&account.CreatedAt,
-		)
+		account, err := scanAccounts(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -109,6 +103,27 @@ func (s *PostgresStore) GetAccounts() ([]*models.Account, error) {
 	return accounts, nil
 }
 
+func scanAccounts(rows *sql.Rows) (*models.Account, error) {
+	account := new(models.Account)
+	err := rows.Scan(
+		&account.ID,
+		&account.FirstName,
+		&account.LastName,
+		&account.AccountNumber,
+		&account.Balance,
+		&account.CreatedAt,
+	)
+	return account, err
+}
+
 func (s *PostgresStore) GetAccountById(id int) (*models.Account, error) {
-	return nil, nil
+	query := `SELECT * FROM account where id = $1`
+	rows, err := s.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		return scanAccounts(rows)
+	}
+	return nil, fmt.Errorf("account %d not found", id)
 }
