@@ -15,7 +15,7 @@ import (
 type Storage interface {
 	CreateAccount(*models.Account) error
 	DeleteAccount(int) error
-	UpdateAccount(*models.Account) error
+	UpdateAccount(int, *models.Account) error
 	GetAccounts() ([]*models.Account, error)
 	GetAccountById(int) (*models.Account, error)
 }
@@ -85,7 +85,17 @@ func (s *PostgresStore) DeleteAccount(id int) error {
 	return err
 }
 
-func (s *PostgresStore) UpdateAccount(*models.Account) error {
+func (s *PostgresStore) UpdateAccount(id int, account *models.Account) error {
+	query := `
+		UPDATE account 
+		SET first_name = $1, last_name = $2
+		WHERE id = $3
+	`
+	s.db.Exec("COMMIT")
+	_, err := s.db.Query(query, account.FirstName, account.LastName, id)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

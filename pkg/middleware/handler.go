@@ -47,6 +47,9 @@ func (s *APIServer) handleGetAccountById(w http.ResponseWriter, r *http.Request)
 	if r.Method == "DELETE" {
 		return s.handleDeleteAccount(w, r)
 	}
+	if r.Method == "PUT" {
+		return s.handleUpdateAccount(w, r)
+	}
 	return fmt.Errorf("method not allowed %s", r.Method)
 }
 
@@ -71,6 +74,22 @@ func (s *APIServer) handleDeleteAccount(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 	return writeJSON(w, http.StatusOK, map[string]int{"deleted_id": id})
+}
+
+func (s *APIServer) handleUpdateAccount(w http.ResponseWriter, r *http.Request) error {
+	id, err := getId(r)
+	if err != nil {
+		return err
+	}
+	accountUpdated := new(models.Account)
+	if err := json.NewDecoder(r.Body).Decode(&accountUpdated); err != nil {
+		return nil
+	}
+	if err := s.store.UpdateAccount(id, accountUpdated); err != nil {
+		return err
+	}
+	return writeJSON(w, http.StatusOK, accountUpdated)
+
 }
 
 func (s *APIServer) handleTransfer(w http.ResponseWriter, r *http.Request) error {
