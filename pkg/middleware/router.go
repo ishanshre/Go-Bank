@@ -23,6 +23,10 @@ type ApiError struct {
 	Error string `json:"error"`
 }
 
+type ApiSuccess struct {
+	Success string `json:"success"`
+}
+
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 	// this func decorate all the router.handler functions we create into HandleFunc
 	// it is a wrapper function that wraps our handler into http.HandleFunc()

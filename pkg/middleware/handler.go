@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -88,7 +89,8 @@ func (s *APIServer) handleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := s.store.UpdateAccount(id, accountUpdated); err != nil {
 		return err
 	}
-	return writeJSON(w, http.StatusOK, accountUpdated)
+	log.Printf("Account with id %v successfully updated", id)
+	return writeJSON(w, http.StatusOK, ApiSuccess{Success: "account updated successfull"})
 
 }
 
