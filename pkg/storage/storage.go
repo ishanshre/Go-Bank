@@ -18,6 +18,7 @@ type Storage interface {
 	UpdateAccount(int, *models.Account) error
 	GetAccounts() ([]*models.Account, error)
 	GetAccountById(int) (*models.Account, error)
+	GetAccountByUsername(string) (*models.Account, error)
 }
 
 type PostgresStore struct {
@@ -49,8 +50,10 @@ func (s *PostgresStore) Init() error {
 func (s *PostgresStore) createAccountTable() error {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		id SERIAL PRIMARY KEY,
-		first_name VARCHAR(50),
-		last_name VARCHAR(50),
+		first_name VARCHAR(255),
+		last_name VARCHAR(255),
+		username VARCHAR(255),	
+		encrypred_password VARCHAR(200),
 		account_number BIGINT,
 		balance BIGINT,
 		created_at TIMESTAMPTZ
@@ -60,13 +63,15 @@ func (s *PostgresStore) createAccountTable() error {
 }
 func (s *PostgresStore) CreateAccount(account *models.Account) error {
 	query := `INSERT INTO account 
-			(first_name, last_name, account_number, balance, created_at) 
-			VALUES ($1, $2, $3, $4, $5)
+			(first_name, last_name, username,  encrypred_password, account_number, balance, created_at) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
 			`
 	_, err := s.db.Query(
 		query,
 		account.FirstName,
 		account.LastName,
+		account.Username,
+		account.EncryptedPassword,
 		account.AccountNumber,
 		account.Balance,
 		account.CreatedAt,
@@ -128,12 +133,30 @@ func (s *PostgresStore) GetAccountById(id int) (*models.Account, error) {
 	return nil, fmt.Errorf("account with id %d not found", id)
 }
 
+func (s *PostgresStore) GetAccountByUsername(username string) (*models.Account, error) {
+	query := `
+		SELECT * FROM account 
+		WHERE username = $1;
+	`
+	rows, err := s.db.Query(query, username)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		return scanAccounts(rows)
+	}
+	return nil, fmt.Errorf("invalid username")
+
+}
+
 func scanAccounts(rows *sql.Rows) (*models.Account, error) {
 	account := new(models.Account)
 	err := rows.Scan(
 		&account.ID,
 		&account.FirstName,
 		&account.LastName,
+		&account.Username,
+		&account.EncryptedPassword,
 		&account.AccountNumber,
 		&account.Balance,
 		&account.CreatedAt,

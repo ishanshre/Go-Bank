@@ -27,7 +27,7 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s storage.Storage) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("calling the awt middleware")
 
-		tokenString := r.Header.Get("x-jwt-token")
+		tokenString := r.Header.Get("Authorization")
 		token, err := validateJWT(tokenString)
 		if err != nil {
 			permissionDenied(w)

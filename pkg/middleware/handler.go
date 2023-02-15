@@ -11,6 +11,21 @@ import (
 	"github.com/ishanshre/Go-Bank/pkg/models"
 )
 
+func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
+	if r.Method == "POST" {
+		var req models.LoginRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			return err
+		}
+		validate, err := validateLogin(req, s.store)
+		if err != nil {
+			return err
+		}
+		return writeJSON(w, http.StatusOK, validate)
+	}
+	return fmt.Errorf("%s method not allowed", r.Method)
+}
+
 func (s *APIServer) handleAccount(w http.ResponseWriter, r *http.Request) error {
 	// if r.Method == "GET" {
 	// 	return s.handleGetAccount(w, r)
@@ -59,7 +74,10 @@ func (s *APIServer) handleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(&createNewAccount); err != nil {
 		return nil
 	}
-	account := models.NewAccount(createNewAccount.FirstName, createNewAccount.LastName)
+	account, err := models.NewAccount(createNewAccount.FirstName, createNewAccount.LastName, createNewAccount.Username, createNewAccount.Password)
+	if err != nil {
+		return err
+	}
 	if err := s.store.CreateAccount(account); err != nil {
 		return err
 	}
