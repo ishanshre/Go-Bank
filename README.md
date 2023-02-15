@@ -10,6 +10,9 @@ POSTGRES_CONN_STRING = "username=yourDbUsername dbname=yourDbName password=yourD
 DB_NAME = ""
 DB_USERNAME = ""
 DB_PASSWORD = ""
+
+
+JWT_SECRET = ""
 ```
 
 ## docker-compose for starting postgresql database

@@ -47,7 +47,7 @@ type APIServer struct {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 	router.HandleFunc("/account", makeHTTPHandleFunc(s.handleAccount)) // wrap the function
-	router.HandleFunc("/account/{id}", makeHTTPHandleFunc(s.handleGetAccountById))
+	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.handleGetAccountById), s.store))
 	router.HandleFunc("/transfer/{id}", makeHTTPHandleFunc(s.handleTransfer))
 	log.Println("JSON API web server starting at port number: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)

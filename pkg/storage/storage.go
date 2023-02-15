@@ -116,6 +116,18 @@ func (s *PostgresStore) GetAccounts() ([]*models.Account, error) {
 	return accounts, nil
 }
 
+func (s *PostgresStore) GetAccountById(id int) (*models.Account, error) {
+	query := `SELECT * FROM account where id = $1`
+	rows, err := s.db.Query(query, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		return scanAccounts(rows)
+	}
+	return nil, fmt.Errorf("account with id %d not found", id)
+}
+
 func scanAccounts(rows *sql.Rows) (*models.Account, error) {
 	account := new(models.Account)
 	err := rows.Scan(
@@ -127,16 +139,4 @@ func scanAccounts(rows *sql.Rows) (*models.Account, error) {
 		&account.CreatedAt,
 	)
 	return account, err
-}
-
-func (s *PostgresStore) GetAccountById(id int) (*models.Account, error) {
-	query := `SELECT * FROM account where id = $1`
-	rows, err := s.db.Query(query, id)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
-		return scanAccounts(rows)
-	}
-	return nil, fmt.Errorf("account %d not found", id)
 }
