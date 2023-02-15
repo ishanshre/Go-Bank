@@ -19,3 +19,10 @@ JWT_SECRET = ""
 ```
 $ docker-compose up -d
 ```
+
+
+## to build files 
+```
+$ go build main.go
+$ ./main
+```
